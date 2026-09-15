@@ -1,9 +1,9 @@
 export type PlayerFundamentals = {
-  serve: 1 | 2 | 3 | 4 | 5;
-  passing: 1 | 2 | 3 | 4 | 5;
-  setting: 1 | 2 | 3 | 4 | 5;
-  attacking: 1 | 2 | 3 | 4 | 5;
-  blocking: 1 | 2 | 3 | 4 | 5;
+  serve: number;
+  passing: number;
+  setting: number;
+  attacking: number;
+  blocking: number;
 };
 
 export type Player = {

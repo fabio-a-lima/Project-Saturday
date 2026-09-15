@@ -1,6 +1,6 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# Arquivos de log e dependências
+# Arquivos de log e dependencias
 node_modules/
 npm-debug.log
 yarn-error.log
@@ -14,7 +14,7 @@ dist/
 .DS_Store
 Thumbs.db
 
-# Arquivos de ambiente (para senhas e chaves de API, se usar no futuro)
+# Arquivos de ambiente
 .env
 .env.*
 
@@ -25,3 +25,6 @@ Thumbs.db
 *.key
 *.mobileprovision
 *.keystore
+
+# Local test data
+uploads/

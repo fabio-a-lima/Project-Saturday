@@ -29,16 +29,21 @@
     "web": {
       "favicon": "./assets/images/icon.png"
     },
+    "plugins": [
+      "expo-font",
+      "expo-splash-screen"
+    ],
     "extra": {
       "eas": {
-        "projectId": "fa96bb1c-fd04-4daa-a150-70bc18d4a7de"
+        "projectId": "a49be8ec-9986-4462-97cf-c5c2514c5f28"
       }
     },
-    "plugins": [
-      "expo-router",
-      "expo-font",
-      "expo-splash-screen",
-      "expo-dev-client"
-    ]
+    "owner": "guilherme.lts",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a49be8ec-9986-4462-97cf-c5c2514c5f28"
+    }
   }
 }

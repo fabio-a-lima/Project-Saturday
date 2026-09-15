@@ -1,6 +1,7 @@
 // utils/winProbabilityCalculator.ts
 
-import { Match, Team } from '../types';
+import { Team, Player, Match } from '../types';
+import { RATING_MAX } from '../constants/Config';
 import { calculatePlayerStats } from './helpers';
 
 interface TeamStats {
@@ -82,7 +83,8 @@ export const calculateWinProbability = (
   // Calculate advantage scores (-1 to 1, where positive favors team1)
   const levelAdvantage = calculateAdvantage(stats1.averageLevel, stats2.averageLevel, 10); // Max expected difference of 10 levels
   const winRateAdvantage = calculateAdvantage(stats1.averageWinRate, stats2.averageWinRate, 100); // Max difference of 100%
-  const fundamentalsAdvantage = calculateAdvantage(stats1.totalFundamentals, stats2.totalFundamentals, stats1.playerCount * 25); // Max expected difference
+  const maxPlayerCount = Math.max(stats1.playerCount, stats2.playerCount);
+  const fundamentalsAdvantage = calculateAdvantage(stats1.totalFundamentals, stats2.totalFundamentals, maxPlayerCount * (RATING_MAX * 5)); // Max expected difference
 
   // Combine advantages with weights
   const totalAdvantage = 

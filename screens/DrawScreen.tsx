@@ -21,8 +21,8 @@ export default function DrawScreen() {
   const [isBalanceModalVisible, setBalanceModalVisible] = useState(false);
   const [scores, setScores] = useState<[number, number]>([0, 0]);
   const [editingScore, setEditingScore] = useState<number | null>(null);
-  const scoreUpdateInterval = useRef<NodeJS.Timeout | null>(null);
-  const accelerationTimeout = useRef<NodeJS.Timeout | null>(null);
+  const scoreUpdateInterval = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const accelerationTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const insets = useSafeAreaInsets();
   const {
     teams,

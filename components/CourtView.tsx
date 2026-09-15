@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   overlayContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill as any,
     zIndex: 3,
   },
   clickArea: {

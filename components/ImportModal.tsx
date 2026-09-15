@@ -178,7 +178,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ visible, onClose, darkMode })
       <Text style={[styles.modalTitle, { color: theme.text }]}>Escanear QR Code</Text>
       <View style={styles.cameraWrapper}>
         <CameraView
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill as any}
           barcodeScannerSettings={{
             barcodeTypes: ["qr"]
           }}

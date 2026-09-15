@@ -57,21 +57,27 @@ const LupeIcon = ({ color, size = 24 }: { color: string; size?: number }) => (
 // --- Custom Rating Component ---
 interface RatingProps {
   value: number;
-  onValueChange: (value: 1 | 2 | 3 | 4 | 5) => void;
+  onValueChange: (value: number) => void;
   color: string;
   inactiveColor: string;
 }
 const Rating: React.FC<RatingProps> = ({ value, onValueChange, color, inactiveColor }) => {
   return (
-    <View style={styles.ratingContainer}>
-      {([1, 2, 3, 4, 5] as const).map((ratingValue) => (
-        <TouchableOpacity key={ratingValue} onPress={() => onValueChange(ratingValue)} activeOpacity={0.7}>
-          <StarIcon
-            filled={ratingValue <= value}
-            color={ratingValue <= value ? color : inactiveColor}
-          />
-        </TouchableOpacity>
-      ))}
+    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+      <Slider
+        style={{ flex: 1, height: 40 }}
+        minimumValue={RATING_MIN}
+        maximumValue={RATING_MAX}
+        step={1}
+        value={value}
+        onValueChange={(val) => onValueChange(val)}
+        minimumTrackTintColor={color}
+        maximumTrackTintColor={inactiveColor}
+        thumbTintColor={color}
+      />
+      <View style={{ width: 40, alignItems: 'center', marginLeft: 8 }}>
+        <Text style={{ fontWeight: 'bold', color: color, fontSize: 16 }}>{value}</Text>
+      </View>
     </View>
   );
 };
@@ -102,36 +108,40 @@ interface PlayerStatsModalProps {
   onRemovePhoto: (playerId: string) => void;
 }
 
+import { RATING_DEFAULT, RATING_MIN, RATING_MAX } from '../constants/Config';
+import Slider from '@react-native-community/slider';
+
 const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({
-  visible, player, darkMode, matchHistory, onClose, onDelete, onUpdateWeight, 
+  visible, onClose, player, darkMode, matchHistory, onDelete, onUpdateWeight,
   onEditName, onChangePhoto, onRemovePhoto, onSaveFundamentals
 }) => {
   const theme = useTheme(darkMode);
-  const allPlayers = usePlayersStore((state) => state.allPlayers);
-  
   const [isGraphsModalVisible, setGraphsModalVisible] = React.useState(false);
   const [fundamentals, setFundamentals] = React.useState<PlayerFundamentals>({
-    serve: 3, passing: 3, setting: 3, attacking: 3, blocking: 3,
+    serve: RATING_DEFAULT, passing: RATING_DEFAULT, setting: RATING_DEFAULT, attacking: RATING_DEFAULT, blocking: RATING_DEFAULT,
   });
 
   React.useEffect(() => {
     if (player?.fundamentals) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFundamentals(player.fundamentals);
     } else {
-      setFundamentals({ serve: 3, passing: 3, setting: 3, attacking: 3, blocking: 3 });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFundamentals({ serve: RATING_DEFAULT, passing: RATING_DEFAULT, setting: RATING_DEFAULT, attacking: RATING_DEFAULT, blocking: RATING_DEFAULT });
     }
-  }, [player?.id]);
+  }, [player?.id, player?.fundamentals]);
 
   const stats = React.useMemo(() => {
     if (!player) return { gamesPlayed: 0, winRate: null as number | null };
     return calculatePlayerStats(player.id, matchHistory);
-  }, [player?.id, matchHistory]);
+  }, [player, matchHistory]);
 
   // Suggested level calculation using match history and fundamentals
   const suggestedLevel: 1 | 2 | 3 = React.useMemo(() => {
-    // Average fundamentals (1-5)
-    const avgFund = (Object.values(fundamentals).reduce((acc, v) => acc + v, 0) / 5);
-    const levelByFund: 1 | 2 | 3 = avgFund < 2.5 ? 1 : avgFund < 3.8 ? 2 : 3;
+    // Average fundamentals (1-10)
+    const numFundamentals = Object.keys(fundamentals).length || 1; // Prevent division by zero
+    const avgFund = (Object.values(fundamentals).reduce((acc, v) => acc + v, 0) / numFundamentals);
+    const levelByFund: 1 | 2 | 3 = avgFund < 5.0 ? 1 : avgFund < 7.6 ? 2 : 3;
 
     // From win rate if available
     const { gamesPlayed, winRate } = stats;
@@ -153,7 +163,7 @@ const PlayerStatsModal: React.FC<PlayerStatsModalProps> = ({
     onUpdateWeight(player);
   }, [onUpdateWeight, player?.id, player]);
 
-  const updateFundament = (fundament: keyof PlayerFundamentals, value: 1 | 2 | 3 | 4 | 5) => {
+  const updateFundament = (fundament: keyof PlayerFundamentals, value: number) => {
     const newFundamentals = { ...fundamentals, [fundament]: value };
     setFundamentals(newFundamentals);
     if (!player) return;

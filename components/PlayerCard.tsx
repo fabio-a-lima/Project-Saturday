@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   inactiveOverlay: {
-    ...StyleSheet.absoluteFillObject, // Faz a View preencher todo o componente pai
+    ...(StyleSheet.absoluteFill as any), // Faz a View preencher todo o componente pai
     backgroundColor: '#1e1e1ea6', // Cor cinza escura semi-transparente
     borderRadius: 8, // Mantém as bordas arredondadas do card
   },

@@ -9,8 +9,14 @@ import { usePlayersStore } from './playersStore';
 
 
 // --- Helper Functions ---
+import { RATING_DEFAULT } from '../constants/Config';
+
 const getDefaultFundamentals = (): PlayerFundamentals => ({
-  serve: 3, passing: 3, setting: 3, attacking: 3, blocking: 3,
+  serve: RATING_DEFAULT,
+  passing: RATING_DEFAULT,
+  setting: RATING_DEFAULT,
+  attacking: RATING_DEFAULT,
+  blocking: RATING_DEFAULT,
 });
 
 const calculateTeamFundamentals = (players: Player[]): PlayerFundamentals => {
@@ -283,7 +289,7 @@ export const useGameStore = create<GameState>()(
           const player1Index = Math.floor(Math.random() * bestCombination[team1Index].length);
           const player2Index = Math.floor(Math.random() * bestCombination[team2Index].length);
 
-          const tempCombination: Player[][] = JSON.parse(JSON.stringify(bestCombination));
+          const tempCombination: Player[][] = bestCombination.map(team => [...team]);
           [tempCombination[team1Index][player1Index], tempCombination[team2Index][player2Index]] = 
           [tempCombination[team2Index][player2Index], tempCombination[team1Index][player1Index]];
 

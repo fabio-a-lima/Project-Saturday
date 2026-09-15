@@ -1,6 +1,6 @@
 // utils/exportImportUtils.ts
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Alert } from 'react-native';
 import { Match, Player } from '../types';
@@ -26,7 +26,7 @@ export interface SinglePlayerData {
 export const exportAsJSON = async (data: AppData): Promise<boolean> => {
   try {
     const fileName = `volleyball-backup-${new Date().toISOString().split('T')[0]}.json`;
-    const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+    const fileUri = `${(FileSystem as any).documentDirectory}${fileName}`;
     
     await FileSystem.writeAsStringAsync(
       fileUri,
@@ -73,7 +73,7 @@ export const exportPlayerAsQRCode = async (player: Player): Promise<string | nul
 
     // First try with image
     let singlePlayerData: SinglePlayerData = {
-      version: '1.0.0',
+      version: '2.0.0',
       exportDate: new Date().toISOString(),
       player: {
         ...player,
@@ -141,11 +141,21 @@ export const importPlayerFromQRCode = async (qrData: string): Promise<Player | n
       throw new Error('Dados do jogador inválidos');
     }
 
+    const isLegacy = !parsedData.version || parsedData.version === '1.0.0';
+    if (isLegacy && parsedData.player.fundamentals) {
+      const p = parsedData.player;
+      p.fundamentals!.serve = Math.min(10, p.fundamentals!.serve * 2);
+      p.fundamentals!.passing = Math.min(10, p.fundamentals!.passing * 2);
+      p.fundamentals!.setting = Math.min(10, p.fundamentals!.setting * 2);
+      p.fundamentals!.attacking = Math.min(10, p.fundamentals!.attacking * 2);
+      p.fundamentals!.blocking = Math.min(10, p.fundamentals!.blocking * 2);
+    }
+
     // If there's an image, save it
     if (parsedData.image) {
       try {
-        const newPhotoUri = `${FileSystem.documentDirectory}avatars/${parsedData.player.id}.jpg`;
-        await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}avatars/`, { intermediates: true });
+        const newPhotoUri = `${(FileSystem as any).documentDirectory}avatars/${parsedData.player.id}.jpg`;
+        await FileSystem.makeDirectoryAsync(`${(FileSystem as any).documentDirectory}avatars/`, { intermediates: true });
         await FileSystem.writeAsStringAsync(newPhotoUri, parsedData.image, {
           encoding: FileSystem.EncodingType.Base64
         });
@@ -204,8 +214,8 @@ const validateImportedData = async (data: any): Promise<AppData | null> => {
       for (const player of data.players) {
         if (player.photoUri && data.images[player.photoUri]) {
           try {
-            const newPhotoUri = `${FileSystem.documentDirectory}avatars/${player.id}.jpg`;
-            await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}avatars/`, { intermediates: true });
+            const newPhotoUri = `${(FileSystem as any).documentDirectory}avatars/${player.id}.jpg`;
+            await FileSystem.makeDirectoryAsync(`${(FileSystem as any).documentDirectory}avatars/`, { intermediates: true });
             await FileSystem.writeAsStringAsync(newPhotoUri, data.images[player.photoUri], {
               encoding: FileSystem.EncodingType.Base64
             });
@@ -218,8 +228,41 @@ const validateImportedData = async (data: any): Promise<AppData | null> => {
       }
     }
 
+    const isLegacy = !data.version || data.version === '1.0.0';
+    if (isLegacy) {
+      data.players.forEach((p: any) => {
+        if (p.fundamentals) {
+          p.fundamentals.serve = Math.min(10, p.fundamentals.serve * 2);
+          p.fundamentals.passing = Math.min(10, p.fundamentals.passing * 2);
+          p.fundamentals.setting = Math.min(10, p.fundamentals.setting * 2);
+          p.fundamentals.attacking = Math.min(10, p.fundamentals.attacking * 2);
+          p.fundamentals.blocking = Math.min(10, p.fundamentals.blocking * 2);
+        }
+      });
+      data.matchHistory.forEach((m: any) => {
+        m.teams.forEach((t: any) => {
+          t.players.forEach((p: any) => {
+            if (p.fundamentals) {
+              p.fundamentals.serve = Math.min(10, p.fundamentals.serve * 2);
+              p.fundamentals.passing = Math.min(10, p.fundamentals.passing * 2);
+              p.fundamentals.setting = Math.min(10, p.fundamentals.setting * 2);
+              p.fundamentals.attacking = Math.min(10, p.fundamentals.attacking * 2);
+              p.fundamentals.blocking = Math.min(10, p.fundamentals.blocking * 2);
+            }
+          });
+          if (t.fundamentals) {
+            t.fundamentals.serve = Math.min(100, t.fundamentals.serve * 2);
+            t.fundamentals.passing = Math.min(100, t.fundamentals.passing * 2);
+            t.fundamentals.setting = Math.min(100, t.fundamentals.setting * 2);
+            t.fundamentals.attacking = Math.min(100, t.fundamentals.attacking * 2);
+            t.fundamentals.blocking = Math.min(100, t.fundamentals.blocking * 2);
+          }
+        });
+      });
+    }
+
     return {
-      version: data.version || '1.0.0',
+      version: '2.0.0', // Upgrade version after migration
       exportDate: data.exportDate || new Date().toISOString(),
       players: data.players,
       selectedPlayerIds: data.selectedPlayerIds,
@@ -253,7 +296,7 @@ export const generateAppData = async (
   }
 
   return {
-    version: '1.0.0',
+    version: '2.0.0',
     exportDate: new Date().toISOString(),
     players,
     selectedPlayerIds: Array.from(selectedPlayerIds),

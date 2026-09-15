@@ -43,6 +43,7 @@ const MatchDetailCard: React.FC<MatchDetailCardProps> = ({
 
   const toggleExpand = () => {
     // 3. A animação é disparada ao mudar o valor do 'progress'
+    // eslint-disable-next-line react-hooks/immutability
     progress.value = withTiming(isExpanded ? 0 : 1, { duration: animationSpeed });
     setIsExpanded(!isExpanded);
   };

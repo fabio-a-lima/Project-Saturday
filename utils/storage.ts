@@ -41,10 +41,35 @@ export async function loadTeamDisplayNames(): Promise<[string, string]> {
   return ['Time 1', 'Time 2'];
 }
 
+const MIGRATION_KEY = '@VolleyballDraw:migratedV2';
+
 export async function loadPlayers(): Promise<Player[]> {
   try {
     const jsonValue = await AsyncStorage.getItem(PLAYERS_STORAGE_KEY);
-    const players = jsonValue != null ? JSON.parse(jsonValue) : [];
+    let players = jsonValue != null ? JSON.parse(jsonValue) : [];
+    
+    // Migration check
+    const migrated = await AsyncStorage.getItem(MIGRATION_KEY);
+    if (!migrated && players.length > 0) {
+      players = players.map((p: any) => {
+        if (p.fundamentals) {
+          return {
+            ...p,
+            fundamentals: {
+              serve: Math.min(10, p.fundamentals.serve * 2),
+              passing: Math.min(10, p.fundamentals.passing * 2),
+              setting: Math.min(10, p.fundamentals.setting * 2),
+              attacking: Math.min(10, p.fundamentals.attacking * 2),
+              blocking: Math.min(10, p.fundamentals.blocking * 2),
+            }
+          };
+        }
+        return p;
+      });
+      // Save migrated players
+      await savePlayers(players);
+    }
+    
     console.log("--- CARREGANDO JOGADORES ---", players.length, "jogadores encontrados"); // DEBUG
     return players;
   } catch (e) {
@@ -115,7 +140,48 @@ export async function saveMatchHistory(history: Match[]): Promise<void> {
 export async function loadMatchHistory(): Promise<Match[]> {
   try {
     const jsonValue = await AsyncStorage.getItem(HISTORY_STORAGE_KEY);
-    return jsonValue != null ? JSON.parse(jsonValue) : [];
+    let matches = jsonValue != null ? JSON.parse(jsonValue) : [];
+    
+    const migrated = await AsyncStorage.getItem(MIGRATION_KEY);
+    if (!migrated) {
+      matches = matches.map((m: any) => {
+        return {
+          ...m,
+          teams: m.teams.map((t: any) => ({
+            ...t,
+            players: t.players.map((p: any) => {
+              if (p.fundamentals) {
+                return {
+                  ...p,
+                  fundamentals: {
+                    serve: Math.min(10, p.fundamentals.serve * 2),
+                    passing: Math.min(10, p.fundamentals.passing * 2),
+                    setting: Math.min(10, p.fundamentals.setting * 2),
+                    attacking: Math.min(10, p.fundamentals.attacking * 2),
+                    blocking: Math.min(10, p.fundamentals.blocking * 2),
+                  }
+                };
+              }
+              return p;
+            }),
+            fundamentals: t.fundamentals ? {
+              serve: Math.min(100, t.fundamentals.serve * 2),
+              passing: Math.min(100, t.fundamentals.passing * 2),
+              setting: Math.min(100, t.fundamentals.setting * 2),
+              attacking: Math.min(100, t.fundamentals.attacking * 2),
+              blocking: Math.min(100, t.fundamentals.blocking * 2),
+            } : undefined
+          }))
+        };
+      });
+      if (matches.length > 0) {
+        await saveMatchHistory(matches);
+      }
+      // Set migrated flag after both migrations are done
+      await AsyncStorage.setItem(MIGRATION_KEY, 'true');
+    }
+    
+    return matches;
   } catch (e) {
     console.error("Erro ao carregar o histórico de partidas", e);
     return [];
